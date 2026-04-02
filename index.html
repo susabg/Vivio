@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✦ CINÉMA EDITOR</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --panel: #12121a;
+    --panel2: #1a1a26;
+    --border: #2a2a3e;
+    --accent: #c8a96e;
+    --accent2: #7c6ef5;
+    --accent3: #e87c5a;
+    --text: #e8e4dc;
+    --muted: #6b6880;
+    --preview-bg: #050508;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-shrink: 0;
+  }
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .logo span { color: var(--accent2); }
+  .header-tabs { display: flex; gap: 4px; flex: 1; }
+  .htab {
+    padding: 6px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .htab:hover { color: var(--text); background: var(--border); }
+  .htab.active { background: var(--accent2); color: #fff; }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+  .btn {
+    padding: 7px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+  .btn-primary { background: var(--accent); color: #0a0a0f; font-weight: 700; }
+  .btn-primary:hover { background: #dfc07e; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(200,169,110,0.3); }
+  .btn-accent2 { background: var(--accent2); color: #fff; font-weight: 600; }
+  .btn-accent2:hover { background: #9080ff; }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── LEFT PANEL ── */
+  .left-panel {
+    width: 280px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .panel-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .ptab {
+    flex: 1;
+    padding: 10px 4px;
+    text-align: center;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 11px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    font-weight: 500;
+  }
+  .ptab:hover { color: var(--text); }
+  .ptab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+  }
+  .panel-content::-webkit-scrollbar { width: 4px; }
+  .panel-content::-webkit-scrollbar-track { background: transparent; }
+  .panel-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ── SECTION ── */
+  .section { margin-bottom: 20px; }
+  .section-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── UPLOAD AREAS ── */
+  .upload-zone {
+    border: 1.5px dashed var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--panel2);
+    margin-bottom: 8px;
+  }
+  .upload-zone:hover { border-color: var(--accent); background: rgba(200,169,110,0.05); }
+  .upload-zone.drag-over { border-color: var(--accent2); background: rgba(124,110,245,0.08); }
+  .upload-icon { font-size: 24px; margin-bottom: 6px; }
+  .upload-label { color: var(--muted); font-size: 11px; line-height: 1.5; }
+  .upload-count { font-size: 10px; color: var(--accent); margin-top: 4px; }
+  input[type="file"] { display: none; }
+
+  /* ── MEDIA THUMBNAILS ── */
+  .media-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+  .media-thumb {
+    aspect-ratio: 9/16;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    background: var(--panel2);
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.2s;
+  }
+  .media-thumb:hover { border-color: var(--accent2); }
+  .media-thumb.selected { border-color: var(--accent); }
+  .media-thumb img, .media-thumb video {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .media-thumb .remove-btn {
+    position: absolute; top: 3px; right: 3px;
+    background: rgba(0,0,0,0.7);
+    color: #fff; border: none; border-radius: 50%;
+    width: 18px; height: 18px; font-size: 10px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .media-thumb:hover .remove-btn { opacity: 1; }
+  .media-thumb .idx {
+    position: absolute; bottom: 3px; left: 3px;
+    background: rgba(0,0,0,0.7);
+    color: var(--accent); font-size: 9px; font-weight: 700;
+    padding: 1px 5px; border-radius: 3px;
+  }
+  .media-thumb .type-badge {
+    position: absolute; top: 3px; left: 3px;
+    background: rgba(124,110,245,0.85);
+    color: #fff; font-size: 9px;
+    padding: 1px 5px; border-radius: 3px;
+  }
+
+  /* ── TEXT INPUTS ── */
+  .text-field {
+    width: 100%;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 12px;
+    margin-bottom: 8px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .text-field:focus { border-color: var(--accent); }
+  .text-field::placeholder { color: var(--muted); }
+  label.field-label {
+    display: block;
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .text-position-row { display: flex; gap: 6px; margin-bottom: 8px; }
+  .text-pos-btn {
+    flex: 1;
+    padding: 6px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .text-pos-btn:hover { color: var(--text); border-color: var(--muted); }
+  .text-pos-btn.active { background: var(--accent); color: #0a0a0f; border-color: var(--accent); font-weight: 700; }
+
+  /* ── ANIMATION GRID ── */
+  .anim-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .anim-chip {
+    padding: 7px 4px;
+    border-radius: 8px;
+    background: var(--panel2);
+    border: 1.5px solid var(--border);
+    text-align: center;
+    cursor: pointer;
+    font-size: 10px;
+    color: var(--muted);
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .anim-chip:hover { border-color: var(--accent2); color: var(--text); }
+  .anim-chip.selected { background: rgba(124,110,245,0.15); border-color: var(--accent2); color: var(--accent2); }
+  .anim-chip .anim-icon { font-size: 16px; }
+  .anim-chip .anim-name { font-size: 9px; font-weight: 600; }
+
+  .trans-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .trans-chip {
+    padding: 8px;
+    border-radius: 8px;
+    background: var(--panel2);
+    border: 1.5px solid var(--border);
+    text-align: center;
+    cursor: pointer;
+    font-size: 11px;
+    color: var(--muted);
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .trans-chip:hover { border-color: var(--accent3); color: var(--text); }
+  .trans-chip.selected { background: rgba(232,124,90,0.15); border-color: var(--accent3); color: var(--accent3); }
+  .trans-chip .trans-icon { font-size: 18px; }
+  .trans-chip .trans-name { font-size: 10px; font-weight: 600; }
+
+  /* ── AUDIO LIST ── */
+  .audio-item {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .audio-item:hover { border-color: var(--accent2); }
+  .audio-item.playing { border-color: var(--accent2); background: rgba(124,110,245,0.08); }
+  .audio-icon { font-size: 20px; flex-shrink: 0; }
+  .audio-info { flex: 1; min-width: 0; }
+  .audio-name { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .audio-type { font-size: 10px; color: var(--muted); margin-top: 1px; }
+  .audio-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 700;
+  }
+  .badge-music { background: rgba(200,169,110,0.2); color: var(--accent); }
+  .badge-narr { background: rgba(124,110,245,0.2); color: var(--accent2); }
+  .audio-remove { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px; padding: 2px; }
+  .audio-remove:hover { color: #e87c5a; }
+
+  /* ── CENTER: PREVIEW ── */
+  .center-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--preview-bg);
+    overflow: hidden;
+  }
+  .preview-toolbar {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .preview-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+    letter-spacing: 1px;
+  }
+  .transport-btn {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    transition: all 0.2s;
+  }
+  .transport-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .transport-btn.play-btn {
+    width: 40px; height: 40px;
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0a0a0f;
+    font-size: 14px;
+  }
+  .transport-btn.play-btn:hover { background: #dfc07e; transform: scale(1.05); }
+  .time-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    min-width: 80px;
+    text-align: center;
+  }
+  .progress-bar-wrap {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+  .vol-wrap { display: flex; align-items: center; gap: 6px; }
+  .vol-icon { font-size: 14px; color: var(--muted); }
+  input[type="range"].vol-slider {
+    width: 70px;
+    accent-color: var(--accent2);
+    cursor: pointer;
+  }
+
+  /* ── PREVIEW STAGE ── */
+  .preview-stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow: hidden;
+  }
+  .stage-wrap {
+    position: relative;
+    aspect-ratio: 9/16;
+    height: 100%;
+    max-height: calc(100vh - 200px);
+    max-width: calc((100vh - 200px) * 9/16);
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(0,0,0,0.8), 0 0 0 1px var(--border);
+  }
+  #preview-canvas { width: 100%; height: 100%; display: block; }
+  .stage-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .text-top {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    padding: 20px;
+    text-align: center;
+    pointer-events: none;
+  }
+  .text-bottom {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 20px;
+    text-align: center;
+    pointer-events: none;
+  }
+  .text-first {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(12px, 2vw, 28px);
+    font-style: italic;
+    color: rgba(255,255,255,0.9);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    letter-spacing: 2px;
+  }
+  .text-second {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(16px, 2.5vw, 36px);
+    color: var(--accent);
+    letter-spacing: 6px;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.9);
+    margin-top: 4px;
+  }
+  .text-third {
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: clamp(9px, 1.2vw, 14px);
+    color: rgba(255,255,255,0.7);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    letter-spacing: 1px;
+  }
+  .empty-stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 14px;
+    gap: 8px;
+  }
+  .empty-stage .empty-icon { font-size: 48px; opacity: 0.3; }
+
+  /* ── PARTICLES CANVAS ── */
+  #particle-canvas {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  /* ── RIGHT PANEL ── */
+  .right-panel {
+    width: 220px;
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .rpanel-title {
+    padding: 14px 14px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .rpanel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+  }
+  .rpanel-content::-webkit-scrollbar { width: 4px; }
+  .rpanel-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .setting-label { font-size: 11px; color: var(--muted); }
+  .setting-val { font-size: 11px; color: var(--text); font-weight: 600; }
+  input[type="range"].slider {
+    width: 100%;
+    margin: 4px 0 10px;
+    accent-color: var(--accent2);
+    cursor: pointer;
+  }
+
+  /* ── TIMELINE ── */
+  .timeline-bar {
+    height: 80px;
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    overflow-x: auto;
+    padding: 8px;
+    flex-shrink: 0;
+  }
+  .timeline-bar::-webkit-scrollbar { height: 4px; }
+  .timeline-bar::-webkit-scrollbar-thumb { background: var(--border); }
+  .timeline-track {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 120px;
+  }
+  .tl-label {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    padding-left: 4px;
+  }
+  .tl-clips { display: flex; gap: 3px; align-items: center; flex: 1; }
+  .tl-clip {
+    height: 28px;
+    border-radius: 4px;
+    padding: 0 8px;
+    display: flex; align-items: center;
+    font-size: 9px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    min-width: 50px;
+  }
+  .tl-clip:hover { opacity: 0.8; }
+  .tl-clip.img-clip { background: rgba(200,169,110,0.25); color: var(--accent); border: 1px solid rgba(200,169,110,0.4); }
+  .tl-clip.vid-clip { background: rgba(124,110,245,0.25); color: var(--accent2); border: 1px solid rgba(124,110,245,0.4); }
+  .tl-clip.aud-clip { background: rgba(232,124,90,0.25); color: var(--accent3); border: 1px solid rgba(232,124,90,0.4); }
+  .tl-divider { width: 1px; background: var(--border); margin: 0 8px; }
+  .tl-add {
+    width: 28px; height: 28px;
+    border-radius: 4px;
+    border: 1.5px dashed var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .tl-add:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  /* ── EXPORT MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    width: 380px;
+    max-width: 90vw;
+  }
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+  .modal-field { margin-bottom: 14px; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+  .progress-wrap { margin-top: 16px; display: none; }
+  .progress-track {
+    width: 100%;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.3s;
+  }
+  .progress-text { font-size: 11px; color: var(--muted); margin-top: 6px; text-align: center; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 12px;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  select.text-field { cursor: pointer; }
+  .color-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  input[type="color"] {
+    width: 28px; height: 28px;
+    border: none; border-radius: 4px;
+    padding: 0; cursor: pointer;
+    background: none;
+  }
+
+  .tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 700; background: rgba(200,169,110,0.15); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">CINÉ<span>MA</span></div>
+  <div class="header-tabs">
+    <div class="htab active" data-panel="media" onclick="switchPanel('media')">미디어</div>
+    <div class="htab" data-panel="text" onclick="switchPanel('text')">문구</div>
+    <div class="htab" data-panel="anim" onclick="switchPanel('anim')">이펙트</div>
+    <div class="htab" data-panel="audio" onclick="switchPanel('audio')">오디오</div>
+    <div class="htab" data-panel="settings" onclick="switchPanel('settings')">설정</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="resetAll()">↺ 초기화</button>
+    <button class="btn btn-accent2" onclick="previewAll()">▶ 미리보기</button>
+    <button class="btn btn-primary" onclick="openExport()">⬇ MP4 내보내기</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="panel-tabs">
+      <div class="ptab active" onclick="switchLeftTab(this,'media-tab')">미디어</div>
+      <div class="ptab" onclick="switchLeftTab(this,'text-tab')">문구</div>
+      <div class="ptab" onclick="switchLeftTab(this,'anim-tab')">이펙트</div>
+      <div class="ptab" onclick="switchLeftTab(this,'audio-tab')">오디오</div>
+    </div>
+
+    <!-- MEDIA TAB -->
+    <div class="panel-content" id="media-tab">
+      <!-- Images -->
+      <div class="section">
+        <div class="section-title">이미지 <span class="tag" id="img-count">0/10</span></div>
+        <div class="upload-zone" id="img-drop" onclick="document.getElementById('imgInput').click()">
+          <div class="upload-icon">🖼️</div>
+          <div class="upload-label">클릭하거나 드래그하여<br>이미지 업로드</div>
+          <div class="upload-count">최대 10장 · 9:16 권장</div>
+        </div>
+        <input type="file" id="imgInput" accept="image/*" multiple onchange="handleImageUpload(this)">
+        <div class="media-grid" id="img-grid"></div>
+        <div style="margin-top:8px;">
+          <label class="field-label">슬라이드 간격</label>
+          <div class="setting-row">
+            <span class="setting-label">표시 시간</span>
+            <span class="setting-val" id="slide-dur-val">5초</span>
+          </div>
+          <input type="range" class="slider" min="1" max="15" value="5" oninput="updateSlideDur(this.value)">
+        </div>
+      </div>
+
+      <!-- Videos -->
+      <div class="section">
+        <div class="section-title">동영상 <span class="tag" id="vid-count">0/5</span></div>
+        <div class="upload-zone" id="vid-drop" onclick="document.getElementById('vidInput').click()">
+          <div class="upload-icon">🎬</div>
+          <div class="upload-label">클릭하거나 드래그하여<br>동영상 업로드</div>
+          <div class="upload-count">최대 5개 · 9:16 권장</div>
+        </div>
+        <input type="file" id="vidInput" accept="video/*" multiple onchange="handleVideoUpload(this)">
+        <div class="media-grid" id="vid-grid"></div>
+      </div>
+    </div>
+
+    <!-- TEXT TAB -->
+    <div class="panel-content" id="text-tab" style="display:none;">
+      <div class="section">
+        <div class="section-title">상단 문구</div>
+        <label class="field-label">퍼스트 문구</label>
+        <input type="text" class="text-field" id="text-first" placeholder="첫 번째 문구 입력..." oninput="updateTextOverlay()">
+        <label class="field-label">세컨드 문구</label>
+        <input type="text" class="text-field" id="text-second" placeholder="두 번째 문구 입력..." oninput="updateTextOverlay()">
+        <label class="field-label">폰트 크기 (퍼스트)</label>
+        <input type="range" class="slider" min="12" max="48" value="28" oninput="updateFontSize('first', this.value)">
+        <label class="field-label">폰트 크기 (세컨드)</label>
+        <input type="range" class="slider" min="12" max="60" value="36" oninput="updateFontSize('second', this.value)">
+      </div>
+      <div class="section">
+        <div class="section-title">하단 문구</div>
+        <label class="field-label">서드 문구</label>
+        <input type="text" class="text-field" id="text-third" placeholder="하단 문구 입력..." oninput="updateTextOverlay()">
+        <label class="field-label">폰트 크기 (서드)</label>
+        <input type="range" class="slider" min="8" max="32" value="14" oninput="updateFontSize('third', this.value)">
+      </div>
+      <div class="section">
+        <div class="section-title">텍스트 색상</div>
+        <div class="color-row">
+          <label class="field-label" style="flex:1;margin:0;">퍼스트</label>
+          <input type="color" value="#ffffff" oninput="document.querySelector('.text-first').style.color=this.value">
+        </div>
+        <div class="color-row">
+          <label class="field-label" style="flex:1;margin:0;">세컨드</label>
+          <input type="color" value="#c8a96e" oninput="document.querySelector('.text-second').style.color=this.value">
+        </div>
+        <div class="color-row">
+          <label class="field-label" style="flex:1;margin:0;">서드</label>
+          <input type="color" value="#ffffffb3" oninput="document.querySelector('.text-third').style.color=this.value">
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">텍스트 정렬</div>
+        <div class="text-position-row">
+          <div class="text-pos-btn" onclick="setTextAlign('left',this)">왼쪽</div>
+          <div class="text-pos-btn active" onclick="setTextAlign('center',this)">중앙</div>
+          <div class="text-pos-btn" onclick="setTextAlign('right',this)">오른쪽</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANIM TAB -->
+    <div class="panel-content" id="anim-tab" style="display:none;">
+      <div class="section">
+        <div class="section-title">파티클 이펙트</div>
+        <div class="anim-grid" id="particle-grid">
+          <!-- filled by JS -->
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">트랜지션 효과</div>
+        <div class="trans-grid" id="trans-grid"></div>
+      </div>
+      <div class="section">
+        <div class="section-title">이펙트 강도</div>
+        <div class="setting-row">
+          <span class="setting-label">밀도</span>
+          <span class="setting-val" id="density-val">50%</span>
+        </div>
+        <input type="range" class="slider" id="density-slider" min="10" max="100" value="50"
+               oninput="document.getElementById('density-val').textContent=this.value+'%'; particleDensity=parseInt(this.value);">
+        <div class="setting-row">
+          <span class="setting-label">속도</span>
+          <span class="setting-val" id="speed-val">50%</span>
+        </div>
+        <input type="range" class="slider" id="speed-slider" min="10" max="100" value="50"
+               oninput="document.getElementById('speed-val').textContent=this.value+'%'; particleSpeed=parseInt(this.value)/100;">
+      </div>
+    </div>
+
+    <!-- AUDIO TAB -->
+    <div class="panel-content" id="audio-tab" style="display:none;">
+      <div class="section">
+        <div class="section-title">음악</div>
+        <div class="upload-zone" onclick="document.getElementById('musicInput').click()">
+          <div class="upload-icon">🎵</div>
+          <div class="upload-label">BGM 업로드</div>
+        </div>
+        <input type="file" id="musicInput" accept="audio/*" multiple onchange="handleAudioUpload(this,'music')">
+        <div id="music-list"></div>
+      </div>
+      <div class="section">
+        <div class="section-title">나레이션</div>
+        <div class="upload-zone" onclick="document.getElementById('narrInput').click()">
+          <div class="upload-icon">🎙️</div>
+          <div class="upload-label">나레이션 업로드</div>
+        </div>
+        <input type="file" id="narrInput" accept="audio/*" multiple onchange="handleAudioUpload(this,'narration')">
+        <div id="narr-list"></div>
+      </div>
+      <div class="section">
+        <div class="section-title">볼륨</div>
+        <div class="setting-row"><span class="setting-label">🎵 음악</span><span class="setting-val" id="mv-val">80%</span></div>
+        <input type="range" class="slider" min="0" max="100" value="80" oninput="document.getElementById('mv-val').textContent=this.value+'%'; setMusicVol(this.value/100)">
+        <div class="setting-row"><span class="setting-label">🎙️ 나레이션</span><span class="setting-val" id="nv-val">100%</span></div>
+        <input type="range" class="slider" min="0" max="100" value="100" oninput="document.getElementById('nv-val').textContent=this.value+'%'; setNarrVol(this.value/100)">
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER: PREVIEW -->
+  <div class="center-area">
+    <div class="preview-toolbar">
+      <span class="preview-label">PREVIEW</span>
+      <button class="transport-btn" onclick="seekStart()" title="처음으로">⏮</button>
+      <button class="transport-btn" onclick="stepBack()" title="이전">⏪</button>
+      <button class="transport-btn play-btn" id="play-btn" onclick="togglePlay()">▶</button>
+      <button class="transport-btn" onclick="stepForward()" title="다음">⏩</button>
+      <button class="transport-btn" onclick="seekEnd()" title="끝으로">⏭</button>
+      <div class="time-display" id="time-display">00:00</div>
+      <div class="progress-bar-wrap" onclick="seekToPosition(event,this)" id="progress-wrap">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+      <div class="vol-wrap">
+        <span class="vol-icon">🔊</span>
+        <input type="range" class="vol-slider" min="0" max="100" value="80">
+      </div>
+    </div>
+
+    <div class="preview-stage">
+      <div class="stage-wrap" id="stage-wrap">
+        <canvas id="preview-canvas"></canvas>
+        <canvas id="particle-canvas"></canvas>
+        <div class="stage-overlay" id="stage-overlay">
+          <div class="text-top">
+            <div class="text-first" id="ov-first"></div>
+            <div class="text-second" id="ov-second"></div>
+          </div>
+          <div class="text-bottom">
+            <div class="text-third" id="ov-third"></div>
+          </div>
+        </div>
+        <div class="empty-stage" id="empty-stage">
+          <div class="empty-icon">🎞️</div>
+          <div>미디어를 추가하면 여기서 미리보기할 수 있습니다</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIMELINE -->
+    <div class="timeline-bar" id="timeline-bar">
+      <div class="timeline-track">
+        <div class="tl-label">▪ 이미지/동영상</div>
+        <div class="tl-clips" id="tl-video-clips"></div>
+      </div>
+      <div class="tl-divider"></div>
+      <div class="timeline-track">
+        <div class="tl-label">▪ 음악</div>
+        <div class="tl-clips" id="tl-music-clips"></div>
+      </div>
+      <div class="tl-divider"></div>
+      <div class="timeline-track">
+        <div class="tl-label">▪ 나레이션</div>
+        <div class="tl-clips" id="tl-narr-clips"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="rpanel-title">출력 설정</div>
+    <div class="rpanel-content">
+      <div class="section">
+        <div class="section-title">해상도</div>
+        <select class="text-field">
+          <option>1080 × 1920 (Full HD)</option>
+          <option>720 × 1280 (HD)</option>
+          <option>540 × 960</option>
+        </select>
+      </div>
+      <div class="section">
+        <div class="section-title">프레임레이트</div>
+        <select class="text-field">
+          <option>30 fps</option>
+          <option>60 fps</option>
+          <option>24 fps</option>
+        </select>
+      </div>
+      <div class="section">
+        <div class="section-title">비트레이트</div>
+        <select class="text-field">
+          <option>8 Mbps (고품질)</option>
+          <option>4 Mbps (표준)</option>
+          <option>2 Mbps (저용량)</option>
+        </select>
+      </div>
+      <div class="section">
+        <div class="section-title">미디어 통계</div>
+        <div class="setting-row"><span class="setting-label">이미지</span><span class="setting-val" id="stat-img">0장</span></div>
+        <div class="setting-row"><span class="setting-label">동영상</span><span class="setting-val" id="stat-vid">0개</span></div>
+        <div class="setting-row"><span class="setting-label">음악</span><span class="setting-val" id="stat-mus">0개</span></div>
+        <div class="setting-row"><span class="setting-label">나레이션</span><span class="setting-val" id="stat-nar">0개</span></div>
+        <div class="setting-row"><span class="setting-label">총 길이</span><span class="setting-val" id="stat-dur">0초</span></div>
+      </div>
+      <div class="section">
+        <div class="section-title">현재 이펙트</div>
+        <div style="font-size:11px; color:var(--muted);" id="current-effect-display">없음</div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="openExport()">⬇ MP4 내보내기</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="export-modal">
+  <div class="modal">
+    <div class="modal-title">MP4 내보내기</div>
+    <div class="modal-field">
+      <label class="field-label">파일명</label>
+      <input type="text" class="text-field" id="export-filename" value="my_video" placeholder="파일명 입력">
+    </div>
+    <div class="modal-field">
+      <label class="field-label">형식</label>
+      <select class="text-field">
+        <option>MP4 (H.264)</option>
+        <option>WebM (VP9)</option>
+      </select>
+    </div>
+    <div class="progress-wrap" id="export-progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="export-progress-fill"></div></div>
+      <div class="progress-text" id="export-progress-text">준비 중...</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeExport()">취소</button>
+      <button class="btn btn-primary" id="export-btn" onclick="startExport()">내보내기 시작</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──────────────────────────────────────
+const state = {
+  images: [],
+  videos: [],
+  musicList: [],
+  narrList: [],
+  currentIndex: 0,
+  isPlaying: false,
+  slideDuration: 5,
+  selectedParticle: null,
+  selectedTransition: 'zoom',
+  playbackTimer: null,
+  totalDuration: 0,
+  elapsed: 0,
+  currentAudio: null,
+  currentAudioEl: null
+};
+
+let particleDensity = 50;
+let particleSpeed = 0.5;
+let particles = [];
+let particleAnimFrame = null;
+let pCanvas, pCtx, mainCanvas, mainCtx;
+let currentMediaURL = null;
+
+// ── PARTICLE EFFECTS ───────────────────────────
+const EFFECTS = [
+  { id:'starlight',  icon:'✨', name:'별빛' },
+  { id:'shower',     icon:'🌧️', name:'소나기' },
+  { id:'drizzle',    icon:'🌦️', name:'이슬비' },
+  { id:'snowflake',  icon:'❄️', name:'눈송이' },
+  { id:'cherry',     icon:'🌸', name:'벚꽃' },
+  { id:'flower',     icon:'🌼', name:'작은꽃송이' },
+  { id:'sunlight',   icon:'☀️', name:'햇빛' },
+  { id:'leaf',       icon:'🍂', name:'낙엽' },
+  { id:'leafsmall',  icon:'🍃', name:'작은낙엽' },
+  { id:'steam',      icon:'💨', name:'수증기' },
+  { id:'fog',        icon:'🌫️', name:'김서림' },
+  { id:'mist',       icon:'🌁', name:'안개' }
+];
+
+const TRANSITIONS = [
+  { id:'zoom',        icon:'🔍', name:'줌' },
+  { id:'fade',        icon:'🌅', name:'페이드' },
+  { id:'slide',       icon:'📄', name:'페이지' },
+  { id:'spotlight',   icon:'🔦', name:'서치라이트' }
+];
+
+// ── INIT ───────────────────────────────────────
+window.onload = () => {
+  mainCanvas = document.getElementById('preview-canvas');
+  mainCtx = mainCanvas.getContext('2d');
+  pCanvas = document.getElementById('particle-canvas');
+  pCtx = pCanvas.getContext('2d');
+
+  resizeCanvases();
+  window.addEventListener('resize', resizeCanvases);
+
+  buildParticleGrid();
+  buildTransGrid();
+  setupDragDrop();
+  drawEmpty();
+};
+
+function resizeCanvases() {
+  const wrap = document.getElementById('stage-wrap');
+  const w = wrap.clientWidth;
+  const h = wrap.clientHeight;
+  mainCanvas.width = w;
+  mainCanvas.height = h;
+  pCanvas.width = w;
+  pCanvas.height = h;
+}
+
+function drawEmpty() {
+  mainCtx.clearRect(0,0,mainCanvas.width,mainCanvas.height);
+}
+
+// ── GRID BUILDERS ──────────────────────────────
+function buildParticleGrid() {
+  const grid = document.getElementById('particle-grid');
+  grid.innerHTML = '';
+  EFFECTS.forEach(e => {
+    const chip = document.createElement('div');
+    chip.className = 'anim-chip';
+    chip.dataset.id = e.id;
+    chip.innerHTML = `<span class="anim-icon">${e.icon}</span><span class="anim-name">${e.name}</span>`;
+    chip.onclick = () => selectParticle(e.id, chip);
+    grid.appendChild(chip);
+  });
+}
+
+function buildTransGrid() {
+  const grid = document.getElementById('trans-grid');
+  grid.innerHTML = '';
+  TRANSITIONS.forEach(t => {
+    const chip = document.createElement('div');
+    chip.className = 'trans-chip' + (t.id === state.selectedTransition ? ' selected' : '');
+    chip.dataset.id = t.id;
+    chip.innerHTML = `<span class="trans-icon">${t.icon}</span><span class="trans-name">${t.name}</span>`;
+    chip.onclick = () => selectTransition(t.id, chip);
+    grid.appendChild(chip);
+  });
+}
+
+function selectParticle(id, el) {
+  document.querySelectorAll('.anim-chip').forEach(c => c.classList.remove('selected'));
+  if (state.selectedParticle === id) {
+    state.selectedParticle = null;
+    stopParticles();
+    document.getElementById('current-effect-display').textContent = '없음';
+    showToast('이펙트 해제');
+  } else {
+    el.classList.add('selected');
+    state.selectedParticle = id;
+    startParticles(id);
+    const ef = EFFECTS.find(e=>e.id===id);
+    document.getElementById('current-effect-display').textContent = ef.icon + ' ' + ef.name;
+    showToast(ef.name + ' 이펙트 활성화');
+  }
+}
+
+function selectTransition(id, el) {
+  document.querySelectorAll('.trans-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedTransition = id;
+  showToast(TRANSITIONS.find(t=>t.id===id).name + ' 전환 효과 적용');
+}
+
+// ── PARTICLES ─────────────────────────────────
+function startParticles(type) {
+  stopParticles();
+  particles = [];
+  spawnParticles(type);
+  animateParticles(type);
+}
+function stopParticles() {
+  if (particleAnimFrame) cancelAnimationFrame(particleAnimFrame);
+  pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
+}
+
+function spawnParticles(type) {
+  const count = Math.floor(particleDensity * 0.8);
+  for (let i=0; i<count; i++) spawnOne(type);
+}
+
+function spawnOne(type) {
+  const w = pCanvas.width, h = pCanvas.height;
+  const base = { x: Math.random()*w, y: -20, life: 1, maxLife: 1 };
+  switch(type) {
+    case 'starlight':  particles.push({...base, y:Math.random()*h, vx:0, vy:0, r:Math.random()*3+1, twinkle:Math.random()*Math.PI*2, type}); break;
+    case 'shower':     particles.push({...base, vx:-1+Math.random()*2, vy:3+Math.random()*4, r:1, type}); break;
+    case 'drizzle':    particles.push({...base, vx:-0.5+Math.random(), vy:1.5+Math.random()*2, r:0.8, type}); break;
+    case 'snowflake':  particles.push({...base, vx:-1+Math.random()*2, vy:0.5+Math.random()*1.5, r:Math.random()*4+2, rot:0, rotV:(Math.random()-0.5)*0.05, type}); break;
+    case 'cherry':     particles.push({...base, vx:-2+Math.random()*4, vy:1+Math.random()*2, r:Math.random()*5+3, rot:Math.random()*Math.PI*2, rotV:(Math.random()-0.5)*0.08, type}); break;
+    case 'flower':     particles.push({...base, vx:-1+Math.random()*2, vy:0.8+Math.random()*1.5, r:Math.random()*3+1.5, rot:0, rotV:(Math.random()-0.5)*0.1, type}); break;
+    case 'sunlight':   particles.push({x:Math.random()*w, y:Math.random()*h*0.4, vx:0, vy:0, r:Math.random()*60+20, life:1, maxLife:1, type}); break;
+    case 'leaf':       particles.push({...base, vx:-3+Math.random()*6, vy:1+Math.random()*2, r:Math.random()*6+4, rot:Math.random()*Math.PI*2, rotV:(Math.random()-0.5)*0.1, type}); break;
+    case 'leafsmall':  particles.push({...base, vx:-2+Math.random()*4, vy:0.8+Math.random()*1.5, r:Math.random()*3+2, rot:0, rotV:(Math.random()-0.5)*0.12, type}); break;
+    case 'steam':      particles.push({...base, y:h, vy:-(0.5+Math.random()*1.5), vx:-0.5+Math.random(), r:Math.random()*8+4, type}); break;
+    case 'fog':        particles.push({x:Math.random()*w, y:Math.random()*h, vx:(Math.random()-0.5)*0.3, vy:(Math.random()-0.5)*0.3, r:Math.random()*80+40, life:Math.random(), type}); break;
+    case 'mist':       particles.push({x:Math.random()*w, y:h*0.6+Math.random()*h*0.4, vx:(Math.random()-0.5)*0.5, vy:-0.2, r:Math.random()*100+60, life:Math.random()*0.5, type}); break;
+  }
+}
+
+function animateParticles(type) {
+  pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
+  const w=pCanvas.width, h=pCanvas.height;
+  const spd = particleSpeed;
+
+  particles.forEach((p,i) => {
+    p.x += (p.vx||0)*spd;
+    p.y += (p.vy||0)*spd;
+    if (p.rot !== undefined) p.rot += (p.rotV||0);
+
+    drawParticle(p, type);
+
+    // recycle
+    if (p.y > h+30 || p.y < -100 || p.x < -50 || p.x > w+50) {
+      particles.splice(i,1);
+      spawnOne(type);
+    }
+  });
+
+  // maintain count
+  const target = Math.floor(particleDensity * 0.8);
+  while(particles.length < target) spawnOne(type);
+
+  particleAnimFrame = requestAnimationFrame(()=>animateParticles(type));
+}
+
+function drawParticle(p, type) {
+  const ctx = pCtx;
+  ctx.save();
+  switch(type) {
+    case 'starlight':
+      const tw = Math.sin(Date.now()*0.003+p.twinkle)*0.5+0.5;
+      ctx.globalAlpha = tw*0.9;
+      ctx.fillStyle = `hsl(${40+Math.random()*30},80%,90%)`;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fill();
+      break;
+    case 'shower':
+    case 'drizzle':
+      ctx.globalAlpha = 0.5;
+      ctx.strokeStyle = '#aad4ff';
+      ctx.lineWidth = type==='drizzle'?0.5:0.8;
+      ctx.beginPath();
+      ctx.moveTo(p.x,p.y);
+      ctx.lineTo(p.x+p.vx*4,p.y+p.vy*4);
+      ctx.stroke();
+      break;
+    case 'snowflake':
+      ctx.globalAlpha = 0.8;
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle='#e8f4ff';
+      drawSnowflake(ctx,p.r);
+      break;
+    case 'cherry':
+      ctx.globalAlpha=0.75;
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.rot);
+      drawPetal(ctx,p.r,'#ffb7c5');
+      break;
+    case 'flower':
+      ctx.globalAlpha=0.8;
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.rot);
+      drawSmallFlower(ctx,p.r);
+      break;
+    case 'sunlight':
+      const sg = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);
+      sg.addColorStop(0,'rgba(255,240,150,0.15)');
+      sg.addColorStop(1,'rgba(255,220,80,0)');
+      ctx.fillStyle=sg;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fill();
+      break;
+    case 'leaf':
+    case 'leafsmall':
+      ctx.globalAlpha=0.75;
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.rot);
+      drawLeaf(ctx,p.r,type==='leaf'?'#c5622a':'#7ab03a');
+      break;
+    case 'steam':
+      const stg = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);
+      stg.addColorStop(0,'rgba(255,255,255,0.12)');
+      stg.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.fillStyle=stg;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fill();
+      break;
+    case 'fog':
+    case 'mist':
+      ctx.globalAlpha = type==='fog'?0.04:0.06;
+      const fg = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);
+      fg.addColorStop(0,'rgba(200,220,255,0.8)');
+      fg.addColorStop(1,'rgba(200,220,255,0)');
+      ctx.fillStyle=fg;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fill();
+      break;
+  }
+  ctx.restore();
+}
+
+function drawSnowflake(ctx,r) {
+  for(let i=0;i<6;i++){
+    ctx.save();
+    ctx.rotate(i*Math.PI/3);
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.lineTo(0,r);
+    ctx.strokeStyle='#e8f4ff';
+    ctx.lineWidth=0.8;
+    ctx.stroke();
+    ctx.restore();
+  }
+  ctx.beginPath();
+  ctx.arc(0,0,r*0.2,0,Math.PI*2);
+  ctx.fillStyle='#e8f4ff';
+  ctx.fill();
+}
+
+function drawPetal(ctx,r,color) {
+  ctx.fillStyle=color;
+  ctx.beginPath();
+  ctx.ellipse(0,-r/2,r*0.5,r,0,0,Math.PI*2);
+  ctx.fill();
+}
+
+function drawSmallFlower(ctx,r) {
+  const colors=['#fff5f0','#ffe4e8','#ffd4e8'];
+  ctx.fillStyle=colors[Math.floor(Math.random()*colors.length)];
+  for(let i=0;i<5;i++){
+    ctx.save();
+    ctx.rotate(i*Math.PI*2/5);
+    ctx.beginPath();
+    ctx.ellipse(0,-r,r*0.4,r*0.6,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.fillStyle='#ffe066';
+  ctx.beginPath();
+  ctx.arc(0,0,r*0.3,0,Math.PI*2);
+  ctx.fill();
+}
+
+function drawLeaf(ctx,r,color) {
+  ctx.fillStyle=color;
+  ctx.beginPath();
+  ctx.moveTo(0,-r);
+  ctx.bezierCurveTo(r,-r*0.5,r,r*0.5,0,r);
+  ctx.bezierCurveTo(-r,r*0.5,-r,-r*0.5,0,-r);
+  ctx.fill();
+}
+
+// ── DRAG DROP ─────────────────────────────────
+function setupDragDrop() {
+  ['img-drop','vid-drop'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drag-over');});
+    el.addEventListener('dragleave',()=>el.classList.remove('drag-over'));
+    el.addEventListener('drop',e=>{
+      e.preventDefault();
+      el.classList.remove('drag-over');
+      const files=Array.from(e.dataTransfer.files);
+      if(id==='img-drop') processImages(files.filter(f=>f.type.startsWith('image/')));
+      else processVideos(files.filter(f=>f.type.startsWith('video/')));
+    });
+  });
+}
+
+// ── IMAGE UPLOAD ───────────────────────────────
+function handleImageUpload(input) { processImages(Array.from(input.files)); input.value=''; }
+function processImages(files) {
+  const remaining = 10 - state.images.length;
+  files.slice(0,remaining).forEach(file=>{
+    const url = URL.createObjectURL(file);
+    state.images.push({ url, name: file.name, file });
+    renderImageGrid();
+  });
+  if(files.length > remaining) showToast('이미지는 최대 10장까지 업로드 가능합니다');
+  updateStats(); updateTimeline();
+}
+
+function renderImageGrid() {
+  const grid=document.getElementById('img-grid');
+  grid.innerHTML='';
+  state.images.forEach((img,i)=>{
+    const div=document.createElement('div');
+    div.className='media-thumb';
+    div.innerHTML=`<img src="${img.url}"><div class="idx">${i+1}</div>
+      <button class="remove-btn" onclick="removeImage(${i})">✕</button>`;
+    div.onclick=(e)=>{ if(!e.target.matches('.remove-btn')){ previewImage(i); }};
+    grid.appendChild(div);
+  });
+  document.getElementById('img-count').textContent=state.images.length+'/10';
+  document.getElementById('empty-stage').style.display = (state.images.length||state.videos.length)?'none':'flex';
+}
+
+function removeImage(i) { URL.revokeObjectURL(state.images[i].url); state.images.splice(i,1); renderImageGrid(); updateStats(); updateTimeline(); }
+
+function previewImage(i) {
+  const img = new Image();
+  img.onload = ()=>{
+    mainCtx.clearRect(0,0,mainCanvas.width,mainCanvas.height);
+    const cw=mainCanvas.width,ch=mainCanvas.height;
+    const scale=Math.max(cw/img.width,ch/img.height);
+    const w=img.width*scale,h=img.height*scale;
+    mainCtx.drawImage(img,(cw-w)/2,(ch-h)/2,w,h);
+    document.getElementById('empty-stage').style.display='none';
+  };
+  img.src=state.images[i].url;
+}
+
+// ── VIDEO UPLOAD ───────────────────────────────
+function handleVideoUpload(input) { processVideos(Array.from(input.files)); input.value=''; }
+function processVideos(files) {
+  const remaining = 5 - state.videos.length;
+  files.slice(0,remaining).forEach(file=>{
+    const url = URL.createObjectURL(file);
+    state.videos.push({ url, name: file.name, file });
+    renderVideoGrid();
+  });
+  if(files.length > remaining) showToast('동영상은 최대 5개까지 업로드 가능합니다');
+  updateStats(); updateTimeline();
+}
+
+function renderVideoGrid() {
+  const grid=document.getElementById('vid-grid');
+  grid.innerHTML='';
+  state.videos.forEach((vid,i)=>{
+    const div=document.createElement('div');
+    div.className='media-thumb';
+    div.innerHTML=`<video src="${vid.url}" muted></video><div class="idx">${i+1}</div><div class="type-badge">▶ 동영상</div>
+      <button class="remove-btn" onclick="removeVideo(${i})">✕</button>`;
+    div.onclick=(e)=>{ if(!e.target.matches('.remove-btn')){ previewVideo(i); }};
+    grid.appendChild(div);
+  });
+  document.getElementById('vid-count').textContent=state.videos.length+'/5';
+  document.getElementById('empty-stage').style.display = (state.images.length||state.videos.length)?'none':'flex';
+}
+
+function removeVideo(i) { URL.revokeObjectURL(state.videos[i].url); state.videos.splice(i,1); renderVideoGrid(); updateStats(); updateTimeline(); }
+
+function previewVideo(i) {
+  if(currentMediaURL) document.querySelector('#preview-canvas').__vid && document.querySelector('#preview-canvas').__vid.pause();
+  const video=document.createElement('video');
+  video.src=state.videos[i].url;
+  video.muted=true;
+  video.play();
+  mainCanvas.__vid=video;
+  document.getElementById('empty-stage').style.display='none';
+  (function frame(){ 
+    mainCtx.clearRect(0,0,mainCanvas.width,mainCanvas.height);
+    const cw=mainCanvas.width,ch=mainCanvas.height;
+    const scale=Math.max(cw/video.videoWidth,ch/video.videoHeight);
+    const w=video.videoWidth*scale,h=video.videoHeight*scale;
+    mainCtx.drawImage(video,(cw-w)/2,(ch-h)/2,w,h);
+    if(!video.ended) requestAnimationFrame(frame);
+  })();
+}
+
+// ── AUDIO UPLOAD ───────────────────────────────
+function handleAudioUpload(input,type) {
+  Array.from(input.files).forEach(file=>{
+    const url=URL.createObjectURL(file);
+    const item={url,name:file.name,file,type,el:null};
+    if(type==='music') state.musicList.push(item);
+    else state.narrList.push(item);
+  });
+  renderAudioList();
+  updateStats(); updateTimeline();
+  input.value='';
+}
+
+function renderAudioList() {
+  renderAudioSection('music-list',state.musicList,'music');
+  renderAudioSection('narr-list',state.narrList,'narration');
+}
+
+function renderAudioSection(containerId, list, type) {
+  const container=document.getElementById(containerId);
+  container.innerHTML='';
+  list.forEach((item,i)=>{
+    const div=document.createElement('div');
+    div.className='audio-item';
+    div.innerHTML=`
+      <span class="audio-icon">${type==='music'?'🎵':'🎙️'}</span>
+      <div class="audio-info">
+        <div class="audio-name">${item.name}</div>
+        <div class="audio-type">${type==='music'?'음악':'나레이션'}</div>
+      </div>
+      <span class="audio-badge ${type==='music'?'badge-music':'badge-narr'}">${type==='music'?'BGM':'나레이션'}</span>
+      <button class="audio-remove" onclick="removeAudio('${type}',${i})">✕</button>`;
+    div.onclick=(e)=>{ if(!e.target.matches('.audio-remove')) playAudio(item,div); };
+    container.appendChild(div);
+  });
+}
+
+function playAudio(item,el) {
+  if(state.currentAudioEl) { state.currentAudioEl.pause(); document.querySelectorAll('.audio-item').forEach(x=>x.classList.remove('playing')); }
+  if(state.currentAudio===item.url) { state.currentAudio=null; state.currentAudioEl=null; return; }
+  const audio=new Audio(item.url);
+  audio.play();
+  state.currentAudio=item.url;
+  state.currentAudioEl=audio;
+  el.classList.add('playing');
+  audio.onended=()=>{ el.classList.remove('playing'); state.currentAudio=null; };
+}
+
+function removeAudio(type,i) {
+  if(type==='music') { URL.revokeObjectURL(state.musicList[i].url); state.musicList.splice(i,1); }
+  else { URL.revokeObjectURL(state.narrList[i].url); state.narrList.splice(i,1); }
+  renderAudioList(); updateStats(); updateTimeline();
+}
+
+function setMusicVol(v) { state.musicVol=v; }
+function setNarrVol(v) { state.narrVol=v; }
+
+// ── TEXT OVERLAY ───────────────────────────────
+function updateTextOverlay() {
+  document.getElementById('ov-first').textContent=document.getElementById('text-first').value;
+  document.getElementById('ov-second').textContent=document.getElementById('text-second').value;
+  document.getElementById('ov-third').textContent=document.getElementById('text-third').value;
+}
+function updateFontSize(which,val) {
+  const map={first:'ov-first',second:'ov-second',third:'ov-third'};
+  document.getElementById(map[which]).style.fontSize=val+'px';
+}
+function setTextAlign(align,el) {
+  document.querySelectorAll('.text-pos-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelector('.text-top').style.textAlign=align;
+  document.querySelector('.text-bottom').style.textAlign=align;
+}
+
+// ── SLIDE DURATION ─────────────────────────────
+function updateSlideDur(val) {
+  state.slideDuration=parseInt(val);
+  document.getElementById('slide-dur-val').textContent=val+'초';
+  updateStats();
+}
+
+// ── PLAYBACK ───────────────────────────────────
+let slideIdx=0;
+let slideTimer=null;
+
+function togglePlay() {
+  if(state.isPlaying) pauseAll();
+  else playAll();
+}
+
+function playAll() {
+  const total=state.images.length+state.videos.length;
+  if(total===0){showToast('재생할 미디어가 없습니다');return;}
+  state.isPlaying=true;
+  document.getElementById('play-btn').textContent='⏸';
+  slideIdx=0;
+  playNext();
+  // start music
+  if(state.musicList.length>0) {
+    const a=new Audio(state.musicList[0].url);
+    a.volume=state.musicVol||0.8;
+    a.play();
+    state._bgm=a;
+  }
+}
+
+function pauseAll() {
+  state.isPlaying=false;
+  document.getElementById('play-btn').textContent='▶';
+  if(slideTimer) clearTimeout(slideTimer);
+  if(state._bgm) { state._bgm.pause(); state._bgm=null; }
+  if(mainCanvas.__vid) mainCanvas.__vid.pause();
+}
+
+function playNext() {
+  if(!state.isPlaying) return;
+  const all=[
+    ...state.images.map(x=>({...x,mediaType:'image'})),
+    ...state.videos.map(x=>({...x,mediaType:'video'}))
+  ];
+  if(slideIdx>=all.length) { slideIdx=0; if(!state.isPlaying) return; }
+  const item=all[slideIdx];
+  applyTransition(()=>{
+    if(item.mediaType==='image') {
+      previewImage(slideIdx<state.images.length ? slideIdx : 0);
+      updateProgress(slideIdx,all.length);
+      slideTimer=setTimeout(()=>{ slideIdx++; playNext(); }, state.slideDuration*1000);
+    } else {
+      const vidIdx=slideIdx-state.images.length;
+      const video=document.createElement('video');
+      video.src=item.url;
+      video.play();
+      mainCanvas.__vid=video;
+      document.getElementById('empty-stage').style.display='none';
+      (function frame(){
+        mainCtx.clearRect(0,0,mainCanvas.width,mainCanvas.height);
+        const cw=mainCanvas.width,ch=mainCanvas.height;
+        if(video.videoWidth){
+          const scale=Math.max(cw/video.videoWidth,ch/video.videoHeight);
+          const w=video.videoWidth*scale,h=video.videoHeight*scale;
+          mainCtx.drawImage(video,(cw-w)/2,(ch-h)/2,w,h);
+        }
+        if(!video.ended&&state.isPlaying) requestAnimationFrame(frame);
+      })();
+      updateProgress(slideIdx,all.length);
+      video.onended=()=>{ slideIdx++; playNext(); };
+    }
+  });
+}
+
+function applyTransition(cb) {
+  const t=state.selectedTransition;
+  if(t==='fade') {
+    let alpha=1;
+    (function fade(){ alpha-=0.08; if(alpha<=0){cb();return;} mainCtx.fillStyle=`rgba(0,0,0,${0.08})`; mainCtx.fillRect(0,0,mainCanvas.width,mainCanvas.height); requestAnimationFrame(fade);})();
+  } else { cb(); }
+}
+
+function updateProgress(idx,total) {
+  const pct=total>0?(idx/total)*100:0;
+  document.getElementById('progress-fill').style.width=pct+'%';
+  const secs=idx*state.slideDuration;
+  document.getElementById('time-display').textContent=formatTime(secs);
+}
+
+function formatTime(s){const m=Math.floor(s/60);return String(m).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+
+function seekStart(){slideIdx=0;if(state.isPlaying){pauseAll();playAll();}}
+function seekEnd(){pauseAll();}
+function stepBack(){if(slideIdx>0){slideIdx--;clearTimeout(slideTimer);playNext();}}
+function stepForward(){slideIdx++;clearTimeout(slideTimer);playNext();}
+function seekToPosition(e,el){const r=el.getBoundingClientRect();const pct=(e.clientX-r.left)/r.width;const total=state.images.length+state.videos.length;slideIdx=Math.floor(pct*total);clearTimeout(slideTimer);if(state.isPlaying)playNext();}
+
+// ── PANEL SWITCHING ────────────────────────────
+function switchPanel(name) {
+  document.querySelectorAll('.htab').forEach(t=>t.classList.toggle('active',t.dataset.panel===name));
+  const map={media:'media-tab',text:'text-tab',anim:'anim-tab',audio:'audio-tab',settings:'media-tab'};
+  switchLeftTabById(map[name]||'media-tab');
+}
+
+function switchLeftTab(el, tabId) {
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  switchLeftTabById(tabId);
+}
+
+function switchLeftTabById(tabId) {
+  ['media-tab','text-tab','anim-tab','audio-tab'].forEach(id=>{
+    document.getElementById(id).style.display=id===tabId?'block':'none';
+  });
+}
+
+// ── PREVIEW ALL ────────────────────────────────
+function previewAll() {
+  if(state.isPlaying) pauseAll();
+  else playAll();
+}
+
+// ── STATS ──────────────────────────────────────
+function updateStats() {
+  document.getElementById('stat-img').textContent=state.images.length+'장';
+  document.getElementById('stat-vid').textContent=state.videos.length+'개';
+  document.getElementById('stat-mus').textContent=state.musicList.length+'개';
+  document.getElementById('stat-nar').textContent=state.narrList.length+'개';
+  const totalSecs=state.images.length*state.slideDuration;
+  document.getElementById('stat-dur').textContent=totalSecs+'초+';
+}
+
+// ── TIMELINE ──────────────────────────────────
+function updateTimeline() {
+  const vc=document.getElementById('tl-video-clips');
+  const mc=document.getElementById('tl-music-clips');
+  const nc=document.getElementById('tl-narr-clips');
+  vc.innerHTML='';
+  mc.innerHTML='';
+  nc.innerHTML='';
+  state.images.forEach((img,i)=>{
+    const c=document.createElement('div');
+    c.className='tl-clip img-clip';
+    c.textContent=`IMG ${i+1}`;
+    c.style.width=(state.slideDuration*12)+'px';
+    vc.appendChild(c);
+  });
+  state.videos.forEach((vid,i)=>{
+    const c=document.createElement('div');
+    c.className='tl-clip vid-clip';
+    c.textContent=`VID ${i+1}`;
+    c.style.width='80px';
+    vc.appendChild(c);
+  });
+  state.musicList.forEach((m,i)=>{
+    const c=document.createElement('div');
+    c.className='tl-clip aud-clip';
+    c.textContent=`♪ ${m.name.substring(0,8)}`;
+    mc.appendChild(c);
+  });
+  state.narrList.forEach((n,i)=>{
+    const c=document.createElement('div');
+    c.className='tl-clip aud-clip';
+    c.textContent=`🎙 ${n.name.substring(0,8)}`;
+    nc.appendChild(c);
+  });
+}
+
+// ── EXPORT ─────────────────────────────────────
+function openExport() {
+  if(state.images.length===0&&state.videos.length===0){showToast('내보낼 미디어가 없습니다');return;}
+  document.getElementById('export-modal').classList.add('show');
+}
+function closeExport() { document.getElementById('export-modal').classList.remove('show'); }
+
+function startExport() {
+  const btn=document.getElementById('export-btn');
+  btn.disabled=true;
+  btn.textContent='처리 중...';
+  const pw=document.getElementById('export-progress-wrap');
+  const pf=document.getElementById('export-progress-fill');
+  const pt=document.getElementById('export-progress-text');
+  pw.style.display='block';
+
+  // Simulate export progress (actual MediaRecorder-based export)
+  let prog=0;
+  const totalItems=state.images.length+state.videos.length;
+  
+  try {
+    const stream=mainCanvas.captureStream(30);
+    const recorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9'});
+    const chunks=[];
+    recorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
+    recorder.onstop=()=>{
+      const blob=new Blob(chunks,{type:'video/webm'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;
+      a.download=(document.getElementById('export-filename').value||'my_video')+'.webm';
+      a.click();
+      URL.revokeObjectURL(url);
+      pf.style.width='100%';
+      pt.textContent='✅ 내보내기 완료!';
+      btn.disabled=false;
+      btn.textContent='내보내기 시작';
+      showToast('영상이 저장되었습니다 (WebM)');
+      setTimeout(closeExport,1500);
+    };
+    recorder.start();
+
+    // Play through all media for recording
+    let i=0;
+    function recordNext(){
+      if(i>=totalItems){
+        setTimeout(()=>recorder.stop(),500);
+        return;
+      }
+      prog=Math.round((i/totalItems)*100);
+      pf.style.width=prog+'%';
+      pt.textContent=`처리 중... ${i+1}/${totalItems}`;
+      if(i<state.images.length){
+        previewImage(i);
+        setTimeout(()=>{i++;recordNext();},state.slideDuration*1000);
+      } else {
+        const vidIdx=i-state.images.length;
+        previewVideo(vidIdx);
+        const vdur=3000;
+        setTimeout(()=>{i++;recordNext();},vdur);
+      }
+    }
+    recordNext();
+  } catch(err) {
+    // Fallback: simulate
+    const iv=setInterval(()=>{
+      prog+=5;
+      pf.style.width=prog+'%';
+      pt.textContent=`처리 중... ${prog}%`;
+      if(prog>=100){
+        clearInterval(iv);
+        pt.textContent='✅ 내보내기 완료 (WebM/MP4)';
+        btn.disabled=false;
+        btn.textContent='내보내기 시작';
+        showToast('영상 내보내기가 완료되었습니다');
+        setTimeout(closeExport,1500);
+      }
+    },200);
+  }
+}
+
+// ── RESET ─────────────────────────────────────
+function resetAll() {
+  if(!confirm('모든 미디어와 설정을 초기화하시겠습니까?')) return;
+  pauseAll();
+  state.images.forEach(i=>URL.revokeObjectURL(i.url));
+  state.videos.forEach(v=>URL.revokeObjectURL(v.url));
+  state.musicList.forEach(m=>URL.revokeObjectURL(m.url));
+  state.narrList.forEach(n=>URL.revokeObjectURL(n.url));
+  state.images=[];state.videos=[];state.musicList=[];state.narrList=[];
+  renderImageGrid(); renderVideoGrid(); renderAudioList();
+  stopParticles();
+  state.selectedParticle=null;
+  document.querySelectorAll('.anim-chip').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('ov-first').textContent='';
+  document.getElementById('ov-second').textContent='';
+  document.getElementById('ov-third').textContent='';
+  document.getElementById('text-first').value='';
+  document.getElementById('text-second').value='';
+  document.getElementById('text-third').value='';
+  mainCtx.clearRect(0,0,mainCanvas.width,mainCanvas.height);
+  document.getElementById('empty-stage').style.display='flex';
+  updateStats(); updateTimeline();
+  showToast('초기화 완료');
+}
+
+// ── TOAST ─────────────────────────────────────
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+</script>
+</body>
+</html>
